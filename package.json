@@ -1,5 +1,5 @@
 {
-  "name": "chat-app-backend",
+  "name": "chat-app-socket",
   "version": "1.0.0",
   "description": "",
   "main": "server.js",
@@ -11,6 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "express": "^4.16.4",
+    "express-fileupload": "^1.0.0",
     "socket.io": "^2.2.0"
   }
 }
