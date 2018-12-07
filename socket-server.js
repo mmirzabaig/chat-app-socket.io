@@ -69,6 +69,7 @@ module.exports = function(server){
             socket.handshake.session.userdata = userData;
             socket.handshake.session.save();
             socket.emit('auth', 'Login Successful');
+            socket.emit('currentUser', userData.username)
 
             // ------------------------------------------------------
             // ----------CREATE NEW CHAT POST--------------------
@@ -76,9 +77,8 @@ module.exports = function(server){
                 socket.on('createNewPost', async (newPostData) => {
                   console.log(newPostData, 'socket data');
                   try {
+                    newPostData.username = foundUser.username;
                     const createdChatPost = await CreatedChatPost.create(newPostData);
-                    createdChatPost.username = foundUser.username;
-                    createdChatPost.save();
                   } catch(err) {
                     console.log(err);
                   }
@@ -171,9 +171,8 @@ module.exports = function(server){
               socket.on('requestTalk', async (data) => {
 
                 try {
-                  data.guestId = foundUser._id;
                   const foundPost = await CreatedChatPost.findById(data.id);
-                  foundPost.guest.push(data);
+                  foundPost.guest.push(foundUser);
                   foundPost.save();
                   console.log(foundPost, 'YEA MIRZA')
 
@@ -197,19 +196,26 @@ module.exports = function(server){
             }
           });
 
-        // ------------------------------------------------------
-        // ------------------------------------------------------
 
-          socket.on('handleChosen', async (id) => {
+          socket.on('handleChosen',  async (id) => {
+            console.log(id);
             try {
-
-              const markChosen = await CreatedChatPost.findByIdAndUpdate(id, {chosen: 'true'});
-              console.log(markChosen, 'CHANGED CHOSEN');
-
+              let chosen = await CreatedChatPost.find({_id: id});
+              console.log(chosen, 'YESSSS')
             } catch (err) {
               console.log(err);
             }
+
+
           })
+
+
+          socket.on('disconnect', function(){
+            console.log('user disconnected');
+          });
+
+        // ------------------------------------------------------
+        // ------------------------------------------------------
 
           } else {
             socket.emit('auth', 'Incorrect Username Or Password');
