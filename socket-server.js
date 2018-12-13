@@ -177,17 +177,22 @@ module.exports = function(server){
     })
     // ------------------------------------------------------
     // ----------Find Science--------------------
-    // ----------Find Science--------------------
+    // ----------Find Science-------------------
     socket.on('findScience', async (data) => {
       console.log(data, 'FIND')
-      try {
-        console.log('FOUND IT')
-        const foundData = await CreatedChatPost.find({category: 'Science'});
-        socket.emit('foundScience', foundData);
-        console.log(foundData, 'FOUND DATAAAaa');
-      } catch(err) {
-        console.log(err);
+      if (socket.handshake.logged === 'true') {
+        try {
+          console.log('FOUND IT')
+          const foundData = await CreatedChatPost.find({category: 'Science'});
+          socket.emit('foundScience', foundData);
+          console.log(foundData, 'FOUND DATAAAaa');
+        } catch(err) {
+          console.log(err);
+        }
+      } else {
+        socket.emit('foundMathematics', 'Incorrect Username Or Password');
       }
+
     })
   // ------------------------------------------------------
   socket.on('requestTalk', async (data) => {
