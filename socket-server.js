@@ -27,10 +27,18 @@ module.exports = function(server){
 
 
     socket.on('message', (message) => {
-      console.log(message, 'messaaaage')
-      messages.push(message);
-      socketServer.emit('messages', messages);
-      console.log(messages);
+      if (socket.handshake.session.logged === true) {
+        const msgObj = {
+          username: socket.handshake.session.username,
+          messages: messages
+        }
+        console.log(message, 'messaaaage')
+        messages.push(message);
+        socketServer.emit('messages', msgObj);
+        console.log(msgObj);
+      } else {
+        socketServer.emit('messages', 'Incorrect Username Or Password');
+      }
     });
 // --------- REGISTER USER ----------------
 // --------- REGISTER USER ----------------
@@ -64,11 +72,12 @@ module.exports = function(server){
 
           if ((bcrypt.compareSync(userData.password, foundUser.password))) {
 
-            socket.handshake.username = userData.username;
+            socket.handshake.session.username = userData.username;
             socket.handshake.session.logged = true;
             socket.handshake.session.save();
             console.log(socket.handshake.session);
             socket.emit('auth', 'Login Successful');
+            socket.emit('session', 'loggedIn');
 
           } else {
             socket.emit('auth', 'Incorrect Username Or Password');
@@ -81,10 +90,16 @@ module.exports = function(server){
       }
     })
 
+    socket.on('logoutUser', (data) => {
+      socket.handshake.session.username = null;
+      socket.handshake.session.logged = false;
+      socket.handshake.session.save();
+    })
+
     socket.on('createNewPost', async (newPostData) => {
       console.log(newPostData, 'socket data');
       try {
-        newPostData.username = foundUser.username;
+        newPostData.username = socket.handshake.session.username;
         const createdChatPost = await CreatedChatPost.create(newPostData);
       } catch(err) {
         console.log(err);
@@ -96,7 +111,7 @@ module.exports = function(server){
     socket.on('findMathematics', async (data) => {
       console.log(data, 'FIND')
 
-      if (socket.handshake.logged === 'true') {
+      if (socket.handshake.session.logged === true) {
 
         try {
           console.log('FOUND IT')
@@ -117,7 +132,7 @@ module.exports = function(server){
     // ----------Find Music--------------------
     socket.on('findMusic', async (data) => {
       console.log(data, 'FIND')
-      if (socket.handshake.logged === 'true') {
+      if (socket.handshake.session.logged === true) {
         try {
           console.log('FOUND IT')
           const foundData = await CreatedChatPost.find({category: 'Music'});
@@ -136,7 +151,7 @@ module.exports = function(server){
     // ----------Find Philosophy--------------------
     socket.on('findPhilosophy', async (data) => {
       console.log(data, 'FIND')
-      if (socket.handshake.logged === 'true') {
+      if (socket.handshake.session.logged === true) {
         try {
           console.log('FOUND IT')
           const foundData = await CreatedChatPost.find({category: 'Philosophy'});
@@ -156,7 +171,7 @@ module.exports = function(server){
     socket.on('findCompScieWebDes', async (data) => {
       console.log(data, 'FIND')
 
-      if (socket.handshake.logged === 'true') {
+      if (socket.handshake.session.logged === true) {
 
         try {
           console.log('FOUND IT')
@@ -177,7 +192,7 @@ module.exports = function(server){
     // ----------Find Books--------------------
     socket.on('findBooks', async (data) => {
       console.log(data, 'FIND')
-      if (socket.handshake.logged === 'true') {
+      if (socket.handshake.session.logged === true) {
 
         try {
           console.log('FOUND IT')
@@ -198,7 +213,7 @@ module.exports = function(server){
     // ----------Find Science-------------------
     socket.on('findScience', async (data) => {
       console.log(data, 'FIND')
-      if (socket.handshake.logged === 'true') {
+      if (socket.handshake.session.logged === true) {
         try {
           console.log('FOUND IT')
           const foundData = await CreatedChatPost.find({category: 'Science'});
@@ -256,7 +271,10 @@ try {
 
 
 socket.on('disconnect', function(){
-console.log('user disconnected');
+  console.log('user disconnected');
+  socket.handshake.session.username = null;
+  socket.handshake.session.logged = false;
+  socket.handshake.session.save();
 });
 
 // ------------------------------------------------------
