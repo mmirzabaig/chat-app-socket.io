@@ -1,15 +1,13 @@
-const io = require('socket.io');
-const express = require('express');
-const app = express();
-const User = require('./models/user');
-const CreatedChatPost = require('./models/createdChatPost');
-const bcrypt = require('bcrypt');
+  const io = require('socket.io');
+  const User = require('./models/user');
+  const CreatedChatPost = require('./models/createdChatPost');
+  const bcrypt = require('bcrypt');
 
-const usernames = {};
-const messages = [];
-
+  const messages = [];
 
 module.exports = function(server){
+
+
   const socketServer = io(server);
   const session = require("express-session")({
     secret: "this yo database",
@@ -24,7 +22,7 @@ module.exports = function(server){
 
 
 
-  socketServer.on('connection', (socket) => {
+  socketServer.on('connection', socket => {
     console.log('socket is connected')
 
 
@@ -66,10 +64,11 @@ module.exports = function(server){
 
           if ((bcrypt.compareSync(userData.password, foundUser.password))) {
 
+            socket.handshake.username = userData.username;
             socket.handshake.session.logged = true;
             socket.handshake.session.save();
+            console.log(socket.handshake.session);
             socket.emit('auth', 'Login Successful');
-            socket.emit('currentUser', userData.username)
 
           } else {
             socket.emit('auth', 'Incorrect Username Or Password');
@@ -96,14 +95,22 @@ module.exports = function(server){
     // ----------Find Mathematics--------------------
     socket.on('findMathematics', async (data) => {
       console.log(data, 'FIND')
-      try {
-        console.log('FOUND IT')
-        const foundData = await CreatedChatPost.find({category: 'Mathematics'});
-        socket.emit('foundMathematics', foundData);
-        console.log(foundData, 'FOUND DATAAAaa');
-      } catch(err) {
-        console.log(err);
+
+      if (socket.handshake.logged === 'true') {
+
+        try {
+          console.log('FOUND IT')
+          const foundData = await CreatedChatPost.find({category: 'Mathematics'});
+          socket.emit('foundMathematics', foundData);
+          console.log(foundData, 'FOUND DATAAAaa');
+        } catch(err) {
+          console.log(err);
+        }
+
+      } else {
+        socket.emit('foundMathematics', 'Incorrect Username Or Password');
       }
+
     })
     // ------------------------------------------------------
     // ----------Find Music--------------------
@@ -152,14 +159,21 @@ module.exports = function(server){
     // ----------Find Books--------------------
     socket.on('findBooks', async (data) => {
       console.log(data, 'FIND')
-      try {
-        console.log('FOUND IT')
-        const foundData = await CreatedChatPost.find({category: 'Books'});
-        socket.emit('foundBooks', foundData);
-        console.log(foundData, 'FOUND DATAAAaa');
-      } catch(err) {
-        console.log(err);
+      if (socket.handshake.logged === 'true') {
+
+        try {
+          console.log('FOUND IT')
+          const foundData = await CreatedChatPost.find({category: 'Books'});
+          socket.emit('foundBooks', foundData);
+          console.log(foundData, 'FOUND DATAAAaa');
+        } catch(err) {
+          console.log(err);
+        }
+
+      } else {
+        socket.emit('foundBooks', 'Incorrect Username Or Password');
       }
+
     })
     // ------------------------------------------------------
     // ----------Find Science--------------------
@@ -218,10 +232,12 @@ try {
 })
 
 
-socket.on('disconnect', () => {
-  console.log('user disconnected');
+socket.on('disconnect', function(){
+console.log('user disconnected');
 });
 
+// ------------------------------------------------------
+// ------------------------------------------------------
 
 
   });/// end of connection
