@@ -24,7 +24,7 @@ module.exports = function(server){
 
 
 
-  socketServer.on('connection', socket => {
+  socketServer.on('connection', (socket) => {
     console.log('socket is connected')
 
 
@@ -66,156 +66,10 @@ module.exports = function(server){
 
           if ((bcrypt.compareSync(userData.password, foundUser.password))) {
 
-            socket.handshake.session.userdata = userData;
+            socket.handshake.session.logged = true;
             socket.handshake.session.save();
             socket.emit('auth', 'Login Successful');
             socket.emit('currentUser', userData.username)
-
-            // ------------------------------------------------------
-            // ----------CREATE NEW CHAT POST--------------------
-            // ----------CREATE NEW CHAT POST--------------------
-                socket.on('createNewPost', async (newPostData) => {
-                  console.log(newPostData, 'socket data');
-                  try {
-                    newPostData.username = foundUser.username;
-                    const createdChatPost = await CreatedChatPost.create(newPostData);
-                  } catch(err) {
-                    console.log(err);
-                  }
-                });
-                // ------------------------------------------------------
-                // ----------Find Mathematics--------------------
-                // ----------Find Mathematics--------------------
-                socket.on('findMathematics', async (data) => {
-                  console.log(data, 'FIND')
-                  try {
-                    console.log('FOUND IT')
-                    const foundData = await CreatedChatPost.find({category: 'Mathematics'});
-                    socket.emit('foundMathematics', foundData);
-                    console.log(foundData, 'FOUND DATAAAaa');
-                  } catch(err) {
-                    console.log(err);
-                  }
-                })
-                // ------------------------------------------------------
-                // ----------Find Music--------------------
-                // ----------Find Music--------------------
-                socket.on('findMusic', async (data) => {
-                  console.log(data, 'FIND')
-                  try {
-                    console.log('FOUND IT')
-                    const foundData = await CreatedChatPost.find({category: 'Music'});
-                    socket.emit('foundMusic', foundData);
-                    console.log(foundData, 'FOUND DATAAAaa');
-                  } catch(err) {
-                    console.log(err);
-                  }
-                })
-                // ------------------------------------------------------
-                // ----------Find Philosophy--------------------
-                // ----------Find Philosophy--------------------
-                socket.on('findPhilosophy', async (data) => {
-                  console.log(data, 'FIND')
-                  try {
-                    console.log('FOUND IT')
-                    const foundData = await CreatedChatPost.find({category: 'Philosophy'});
-                    socket.emit('foundPhilosophy', foundData);
-                    console.log(foundData, 'FOUND DATAAAaa');
-                  } catch(err) {
-                    console.log(err);
-                  }
-                })
-                // ------------------------------------------------------
-                // ----------Find Computer Science & Web Design--------------------
-                // ----------Find Computer Science & Web Design--------------------
-                socket.on('findCompScieWebDes', async (data) => {
-                  console.log(data, 'FIND')
-                  try {
-                    console.log('FOUND IT')
-                    const foundData = await CreatedChatPost.find({category: 'CompScieWebDes'});
-                    socket.emit('foundCompScieWebDes', foundData);
-                    console.log(foundData, 'FOUND DATAAAaa');
-                  } catch(err) {
-                    console.log(err);
-                  }
-                })
-                // ------------------------------------------------------
-                // ----------Find Books--------------------
-                // ----------Find Books--------------------
-                socket.on('findBooks', async (data) => {
-                  console.log(data, 'FIND')
-                  try {
-                    console.log('FOUND IT')
-                    const foundData = await CreatedChatPost.find({category: 'Books'});
-                    socket.emit('foundBooks', foundData);
-                    console.log(foundData, 'FOUND DATAAAaa');
-                  } catch(err) {
-                    console.log(err);
-                  }
-                })
-                // ------------------------------------------------------
-                // ----------Find Science--------------------
-                // ----------Find Science--------------------
-                socket.on('findScience', async (data) => {
-                  console.log(data, 'FIND')
-                  try {
-                    console.log('FOUND IT')
-                    const foundData = await CreatedChatPost.find({category: 'Science'});
-                    socket.emit('foundScience', foundData);
-                    console.log(foundData, 'FOUND DATAAAaa');
-                  } catch(err) {
-                    console.log(err);
-                  }
-                })
-              // ------------------------------------------------------
-              socket.on('requestTalk', async (data) => {
-
-                try {
-                  const foundPost = await CreatedChatPost.findById(data.id);
-                  foundPost.guest.push(foundUser);
-                  foundPost.save();
-                  console.log(foundPost, 'YEA MIRZA')
-
-                } catch(err) {
-                  console.log(err);
-                }
-              })
-        // ------------------------------------------------------
-        // ------------------------------------------------------
-
-          socket.on('requestActivePosts', async (data) => {
-            try {
-              console.log(foundUser.username, 'USERNAM3')
-              const foundActivePosts = await CreatedChatPost.find({username: foundUser.username});
-
-              socket.emit('foundActivePosts', foundActivePosts);
-              console.log('PLEASE WORK',foundActivePosts);
-
-            } catch(err) {
-              console.log(err);
-            }
-          });
-
-
-          socket.on('handleChosen',  async (id) => {
-            console.log(id);
-            try {
-              let chosen = await CreatedChatPost.find({_id: id});
-              console.log(chosen, 'YESSSS')
-            } catch (err) {
-              console.log(err);
-            }
-
-
-          })
-
-
-          socket.on('disconnect', function(){
-            console.log('user disconnected');
-          });
-
-        // ------------------------------------------------------
-        // ------------------------------------------------------
 
           } else {
             socket.emit('auth', 'Incorrect Username Or Password');
@@ -227,6 +81,147 @@ module.exports = function(server){
         console.log(err)
       }
     })
+
+    socket.on('createNewPost', async (newPostData) => {
+      console.log(newPostData, 'socket data');
+      try {
+        newPostData.username = foundUser.username;
+        const createdChatPost = await CreatedChatPost.create(newPostData);
+      } catch(err) {
+        console.log(err);
+      }
+    });
+    // ------------------------------------------------------
+    // ----------Find Mathematics--------------------
+    // ----------Find Mathematics--------------------
+    socket.on('findMathematics', async (data) => {
+      console.log(data, 'FIND')
+      try {
+        console.log('FOUND IT')
+        const foundData = await CreatedChatPost.find({category: 'Mathematics'});
+        socket.emit('foundMathematics', foundData);
+        console.log(foundData, 'FOUND DATAAAaa');
+      } catch(err) {
+        console.log(err);
+      }
+    })
+    // ------------------------------------------------------
+    // ----------Find Music--------------------
+    // ----------Find Music--------------------
+    socket.on('findMusic', async (data) => {
+      console.log(data, 'FIND')
+      try {
+        console.log('FOUND IT')
+        const foundData = await CreatedChatPost.find({category: 'Music'});
+        socket.emit('foundMusic', foundData);
+        console.log(foundData, 'FOUND DATAAAaa');
+      } catch(err) {
+        console.log(err);
+      }
+    })
+    // ------------------------------------------------------
+    // ----------Find Philosophy--------------------
+    // ----------Find Philosophy--------------------
+    socket.on('findPhilosophy', async (data) => {
+      console.log(data, 'FIND')
+      try {
+        console.log('FOUND IT')
+        const foundData = await CreatedChatPost.find({category: 'Philosophy'});
+        socket.emit('foundPhilosophy', foundData);
+        console.log(foundData, 'FOUND DATAAAaa');
+      } catch(err) {
+        console.log(err);
+      }
+    })
+    // ------------------------------------------------------
+    // ----------Find Computer Science & Web Design--------------------
+    // ----------Find Computer Science & Web Design--------------------
+    socket.on('findCompScieWebDes', async (data) => {
+      console.log(data, 'FIND')
+      try {
+        console.log('FOUND IT')
+        const foundData = await CreatedChatPost.find({category: 'CompScieWebDes'});
+        socket.emit('foundCompScieWebDes', foundData);
+        console.log(foundData, 'FOUND DATAAAaa');
+      } catch(err) {
+        console.log(err);
+      }
+    })
+    // ------------------------------------------------------
+    // ----------Find Books--------------------
+    // ----------Find Books--------------------
+    socket.on('findBooks', async (data) => {
+      console.log(data, 'FIND')
+      try {
+        console.log('FOUND IT')
+        const foundData = await CreatedChatPost.find({category: 'Books'});
+        socket.emit('foundBooks', foundData);
+        console.log(foundData, 'FOUND DATAAAaa');
+      } catch(err) {
+        console.log(err);
+      }
+    })
+    // ------------------------------------------------------
+    // ----------Find Science--------------------
+    // ----------Find Science--------------------
+    socket.on('findScience', async (data) => {
+      console.log(data, 'FIND')
+      try {
+        console.log('FOUND IT')
+        const foundData = await CreatedChatPost.find({category: 'Science'});
+        socket.emit('foundScience', foundData);
+        console.log(foundData, 'FOUND DATAAAaa');
+      } catch(err) {
+        console.log(err);
+      }
+    })
+  // ------------------------------------------------------
+  socket.on('requestTalk', async (data) => {
+
+    try {
+      const foundPost = await CreatedChatPost.findById(data.id);
+      foundPost.guest.push(foundUser);
+      foundPost.save();
+      console.log(foundPost, 'YEA MIRZA')
+
+    } catch(err) {
+      console.log(err);
+    }
+  })
+// ------------------------------------------------------
+// ------------------------------------------------------
+
+socket.on('requestActivePosts', async (data) => {
+try {
+  console.log(foundUser.username, 'USERNAM3')
+  const foundActivePosts = await CreatedChatPost.find({username: foundUser.username});
+
+  socket.emit('foundActivePosts', foundActivePosts);
+  console.log('PLEASE WORK',foundActivePosts);
+
+} catch(err) {
+  console.log(err);
+}
+});
+
+
+socket.on('handleChosen',  async (id) => {
+console.log(id);
+try {
+  let chosen = await CreatedChatPost.find({_id: id});
+  console.log(chosen, 'YESSSS')
+} catch (err) {
+  console.log(err);
+}
+
+
+})
+
+
+socket.on('disconnect', () => {
+  console.log('user disconnected');
+});
+
 
 
   });/// end of connection

@@ -9,7 +9,7 @@ require('./db/db');
 
 
 
-app.use(bodyParser.urlencoded({extended: false}));
+app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
 
 
@@ -27,5 +27,7 @@ app.use(cors(corsOptions));
 const server = app.listen(8000, () => {
   console.log('Your server is listening on port 8000');
 });
+
+const http = require('http').Server(server)
 
 chatAppServer(server);
