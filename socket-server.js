@@ -117,42 +117,60 @@ module.exports = function(server){
     // ----------Find Music--------------------
     socket.on('findMusic', async (data) => {
       console.log(data, 'FIND')
-      try {
-        console.log('FOUND IT')
-        const foundData = await CreatedChatPost.find({category: 'Music'});
-        socket.emit('foundMusic', foundData);
-        console.log(foundData, 'FOUND DATAAAaa');
-      } catch(err) {
-        console.log(err);
+      if (socket.handshake.logged === 'true') {
+        try {
+          console.log('FOUND IT')
+          const foundData = await CreatedChatPost.find({category: 'Music'});
+          socket.emit('foundMusic', foundData);
+          console.log(foundData, 'FOUND DATAAAaa');
+        } catch(err) {
+          console.log(err);
+        }
+      } else {
+        socket.emit('foundMathematics', 'Incorrect Username Or Password');
       }
+
     })
     // ------------------------------------------------------
     // ----------Find Philosophy--------------------
     // ----------Find Philosophy--------------------
     socket.on('findPhilosophy', async (data) => {
       console.log(data, 'FIND')
-      try {
-        console.log('FOUND IT')
-        const foundData = await CreatedChatPost.find({category: 'Philosophy'});
-        socket.emit('foundPhilosophy', foundData);
-        console.log(foundData, 'FOUND DATAAAaa');
-      } catch(err) {
-        console.log(err);
+      if (socket.handshake.logged === 'true') {
+        try {
+          console.log('FOUND IT')
+          const foundData = await CreatedChatPost.find({category: 'Philosophy'});
+          socket.emit('foundPhilosophy', foundData);
+          console.log(foundData, 'FOUND DATAAAaa');
+        } catch(err) {
+          console.log(err);
+        }
+      } else {
+        socket.emit('foundMathematics', 'Incorrect Username Or Password');
       }
+
     })
     // ------------------------------------------------------
     // ----------Find Computer Science & Web Design--------------------
     // ----------Find Computer Science & Web Design--------------------
     socket.on('findCompScieWebDes', async (data) => {
       console.log(data, 'FIND')
-      try {
-        console.log('FOUND IT')
-        const foundData = await CreatedChatPost.find({category: 'CompScieWebDes'});
-        socket.emit('foundCompScieWebDes', foundData);
-        console.log(foundData, 'FOUND DATAAAaa');
-      } catch(err) {
-        console.log(err);
+
+      if (socket.handshake.logged === 'true') {
+
+        try {
+          console.log('FOUND IT')
+          const foundData = await CreatedChatPost.find({category: 'CompScieWebDes'});
+          socket.emit('foundCompScieWebDes', foundData);
+          console.log(foundData, 'FOUND DATAAAaa');
+        } catch(err) {
+          console.log(err);
+        }
+
+      } else {
+        socket.emit('foundMathematics', 'Incorrect Username Or Password');
       }
+
     })
     // ------------------------------------------------------
     // ----------Find Books--------------------
