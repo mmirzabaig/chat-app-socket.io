@@ -1,7 +1,8 @@
 ## Available Scripts
 In the project directory, you can run:
 
-## nodemon
+## 1) npm install
+## 2) nodemon
 
 # Chat App Socket.io Backend
 A User-friendly platform to locate breweries in and around Austin, TX and also give locations to nearby places to get tacos.
