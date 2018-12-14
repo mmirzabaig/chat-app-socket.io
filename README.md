@@ -33,7 +33,7 @@ A User-friendly platform to locate breweries in and around Austin, TX and also g
 
 ## Stretch Goals:
 
-
+## Images:
 ![alt text](./public/images/home.png "Logo Title Text 1")
 ![alt text](./public/images/login.png "Logo Title Text 1")
 ![alt text](./public/images/books.png "Logo Title Text 1")
