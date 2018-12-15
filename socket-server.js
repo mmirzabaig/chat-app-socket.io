@@ -4,7 +4,6 @@
 
 
   const messages = [];
-  let userLoggedIn = null;
 
 module.exports = function(server){
 
@@ -28,11 +27,11 @@ module.exports = function(server){
       if (socket.handshake.session.logged === true) {
         const msgObj = {
           username: socket.handshake.session.username,
-          messages: messages
+          message: message
         }
         console.log(message, 'messaaaage')
-        messages.push(message);
-        socketServer.emit('messages', msgObj);
+        messages.push(msgObj);
+        socketServer.emit('messages', messages);
         console.log(msgObj);
       } else {
         socketServer.emit('messages', 'Incorrect Username Or Password');
@@ -71,13 +70,12 @@ module.exports = function(server){
           if ((bcrypt.compareSync(userData.password, foundUser.password))) {
 
             socket.handshake.session.username = userData.username;
-            userLoggedIn = socket.handshake.session.username;
             socket.handshake.session.logged = true;
             socket.handshake.session.save();
             console.log(socket.handshake.session);
             socket.emit('auth', 'Login Successful');
             socket.emit('session', 'loggedIn');
-            socket.emit('currentUser', userLoggedIn)
+            socket.emit('currentUser', socket.handshake.session.username)
 
           } else {
             socket.emit('auth', 'Incorrect Username Or Password');
@@ -93,7 +91,6 @@ module.exports = function(server){
     socket.on('logoutUser', (data) => {
       socket.emit('session', 'loggedIn');
       socket.handshake.session.username = null;
-      userLoggedIn = socket.handshake.session.username;
       socket.handshake.session.logged = false;
       socket.handshake.session.save();
     })
@@ -101,7 +98,7 @@ module.exports = function(server){
     socket.on('createNewPost', async (newPostData) => {
       console.log(newPostData, 'socket data');
       try {
-        newPostData.username = userLoggedIn;
+        newPostData.username = socket.handshake.session.username;
         const createdChatPost = await CreatedChatPost.create(newPostData);
       } catch(err) {
         console.log(err);
@@ -234,7 +231,7 @@ module.exports = function(server){
 
     try {
       const foundPost = await CreatedChatPost.findById(data.id);
-      foundPost.guest.push(userLoggedIn);
+      foundPost.guest.push(socket.handshake.session.username);
       foundPost.save();
       console.log(foundPost, 'YEA MIRZA')
 
@@ -247,7 +244,7 @@ module.exports = function(server){
 
 socket.on('requestActivePosts', async (data) => {
 try {
-  const foundActivePosts = await CreatedChatPost.find({username: userLoggedIn});
+  const foundActivePosts = await CreatedChatPost.find({username: socket.handshake.session.username});
 
   socket.emit('foundActivePosts', foundActivePosts);
   console.log('PLEASE WORK',foundActivePosts);
@@ -274,7 +271,6 @@ try {
 socket.on('disconnect', function(){
   console.log('user disconnected');
   socket.handshake.session.username = null;
-  userLoggedIn = socket.handshake.session.username;
   socket.handshake.session.logged = false;
   socket.handshake.session.save();
 });
