@@ -29,7 +29,6 @@ module.exports = function(server){
           username: socket.handshake.session.username,
           message: message
         }
-        console.log(message, 'messaaaage')
         messages.push(msgObj);
         socketServer.emit('messages', messages);
         console.log(msgObj);
