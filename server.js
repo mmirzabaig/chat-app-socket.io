@@ -12,13 +12,10 @@ require('./db/db');
 
 
 
-app.use(express.static(__dirname));
+// app.use(express.static(__dirname));
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
-// const server = app.listen(8000, () => {
-//   console.log('Your server is listening on port 8000');
-// });
-
+ 
 
 const server = require('http').createServer(app)
 
