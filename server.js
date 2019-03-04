@@ -4,27 +4,28 @@ const bodyParser = require('body-parser');
 const User = require('./models/user');
 const CreatedChatPost = require('./models/createdChatPost');
 const bcrypt = require('bcrypt');
+var cron = require('node-cron');
 
 const messages = [];
+let time = 'earfafawf';
 // Attach session
 
 require('./db/db');
 
 
-
 // app.use(express.static(__dirname));
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
- 
 
-const server = require('http').createServer(app)
+
+const server = require('http').createServer(app);
 
 const io = require('socket.io');
 const socketServer = io(server);
 const session = require("express-session")({
   secret: "this yo backend",
-  resave: false,
-  saveUninitialized: false
+  resave: true,
+  saveUninitialized: true
 });
 
 const sharedsession = require("express-socket.io-session");
@@ -39,10 +40,30 @@ socketServer.listen(8000, () => {
 
 socketServer.on('connection', socket => {
   console.log('socket is connected')
+  console.log('BEFORE CRON!!!')
+  cron.schedule("59 23 * * *", function() {
+        console.log("---------------------");
+        console.log("Running Cron Job");
+        console.log('HELLO JAWAD');
+      });
 
+
+
+  socket.on('subscribeToTimer', async (interval) => {
+    await console.log('client is subscribing to timer with interval ', interval);
+    await setInterval( async ()  => {
+        time = new Date();
+        await console.log(time.toLocaleTimeString());
+        // document.getElementById("demo").innerHTML = d.toLocaleTimeString();
+        // console.log(time.getHours() + ':' + time.getMinutes());
+        await console.log(time.getUTCHours() + ':' + time.getUTCMinutes());
+
+
+      await socketServer.emit('timer', time);
+    }, interval);
+  });
 
   socket.on('message', async (message) => {
-    console.log(socket.handshake, 'THIS IS SESSION')
     if (socket.handshake.session.logged) {
       const msgObj = await {
         username: socket.handshake.session.username,
@@ -72,7 +93,15 @@ socketServer.on('connection', socket => {
         userEntry.linkedin = userData.linkedin;
 
       const createdUser = await User.create(userEntry);
-      console.log(createdUser, 'MongoDB data');
+
+      if (createdUser._id) {
+        socketServer.emit('registeredUser', 'registration successfull');
+        socket.handshake.session.username = userData.username;
+        socket.handshake.session.logged = true;
+        socket.handshake.session.save();
+        socket.emit('session', 'loggedIn');
+        socket.emit('currentUser', socket.handshake.session.username)
+      }
     } catch(err) {
       console.log(err);
     }
@@ -110,13 +139,15 @@ socketServer.on('connection', socket => {
     socket.emit('session', 'loggedIn');
     socket.handshake.session.username = null;
     socket.handshake.session.logged = false;
-    socket.handshake.session.save();
+    // socket.handshake.session.destroy();
+    console.log(socket.handshake.session, 'mirza')
   })
 
   socket.on('createNewPost', async (newPostData) => {
     console.log(newPostData, 'socket data');
     try {
       newPostData.username = socket.handshake.session.username;
+      newPostData.createdAt = time;
       const createdChatPost = await CreatedChatPost.create(newPostData);
     } catch(err) {
       console.log(err);

@@ -5,8 +5,8 @@ const createdChatPost = new mongoose.Schema({
   topic: String,
   description: String,
   category: String,
-  timeHour: String,
-  timeMinute: String,
+  date: String,
+  createdAt: Date,
   guest: [],
   chosen: {type: Boolean, default: false}
 });
