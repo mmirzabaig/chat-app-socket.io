@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const createdChatPost = new mongoose.Schema({
-  username: String,
+  creatorID: String,
   topic: String,
   description: String,
   category: String,

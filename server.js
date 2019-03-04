@@ -3,6 +3,7 @@ const app = express();
 const bodyParser = require('body-parser');
 const User = require('./models/user');
 const CreatedChatPost = require('./models/createdChatPost');
+const ChatSession = require('./models/chatSession');
 const bcrypt = require('bcrypt');
 var cron = require('node-cron');
 
@@ -94,13 +95,17 @@ socketServer.on('connection', socket => {
 
       const createdUser = await User.create(userEntry);
 
+
       if (createdUser._id) {
         socketServer.emit('registeredUser', 'registration successfull');
         socket.handshake.session.username = userData.username;
+        socket.handshake.session.creatorID = createdUser._id;
+        console.log(createdUser);
+        console.log(socket.handshake.session.creatorID);
         socket.handshake.session.logged = true;
         socket.handshake.session.save();
-        socket.emit('session', 'loggedIn');
-        socket.emit('currentUser', socket.handshake.session.username)
+        await socket.emit('session', 'loggedIn');
+        await socket.emit('currentUser', socket.handshake.session.username)
       }
     } catch(err) {
       console.log(err);
@@ -117,6 +122,7 @@ socketServer.on('connection', socket => {
         if ((bcrypt.compareSync(userData.password, foundUser.password))) {
 
           socket.handshake.session.username = userData.username;
+          socket.handshake.session.creatorID = foundUser._id;
           socket.handshake.session.logged = true;
           socket.handshake.session.save();
           console.log(socket.handshake.session);
@@ -138,6 +144,7 @@ socketServer.on('connection', socket => {
   socket.on('logoutUser', (data) => {
     socket.emit('session', 'loggedIn');
     socket.handshake.session.username = null;
+    socket.handshake.session.creatorID = null;
     socket.handshake.session.logged = false;
     // socket.handshake.session.destroy();
     console.log(socket.handshake.session, 'mirza')
@@ -146,7 +153,7 @@ socketServer.on('connection', socket => {
   socket.on('createNewPost', async (newPostData) => {
     console.log(newPostData, 'socket data');
     try {
-      newPostData.username = socket.handshake.session.username;
+      newPostData.creatorID = socket.handshake.session.username;
       newPostData.createdAt = time;
       const createdChatPost = await CreatedChatPost.create(newPostData);
     } catch(err) {
