@@ -42,17 +42,20 @@ socketServer.listen(8000, () => {
 socketServer.on('connection', socket => {
   console.log('socket is connected')
   console.log('BEFORE CRON!!!')
-  cron.schedule("59 23 * * *", function() {
-        console.log("---------------------");
-        console.log("Running Cron Job");
-        console.log('HELLO JAWAD');
-      });
+  cron.schedule('0 1 * * *', () => {
+    console.log('Runing a job at 01:00 at America/Sao_Paulo timezone');
+  }, {
+    scheduled: true,
+    timezone: "Europe/London"
+  });
+
+
 
 
 
   socket.on('subscribeToTimer', async (interval) => {
     await console.log('client is subscribing to timer with interval ', interval);
-    await setInterval( async ()  => {
+    await setInterval( async () => {
         time = new Date();
         await console.log(time.toLocaleTimeString());
         // document.getElementById("demo").innerHTML = d.toLocaleTimeString();
@@ -152,10 +155,12 @@ socketServer.on('connection', socket => {
 
   socket.on('createNewPost', async (newPostData) => {
     console.log(newPostData, 'socket data');
+    // console.log(req.body.date + 'T' + req.body.time);
     try {
-      newPostData.creatorID = socket.handshake.session.username;
+      newPostData.creatorID = socket.handshake.session.creatorID;
       newPostData.createdAt = time;
       const createdChatPost = await CreatedChatPost.create(newPostData);
+      console.log(createdChatPost);
     } catch(err) {
       console.log(err);
     }
@@ -300,7 +305,9 @@ socket.on('requestTalk', async (data) => {
 
 socket.on('requestActivePosts', async (data) => {
 try {
-const foundActivePosts = await CreatedChatPost.find({username: socket.handshake.session.username});
+  console.log(socket.handshake.session.creatorID);
+const foundActivePosts = await CreatedChatPost.find({});
+
 
 socket.emit('foundActivePosts', foundActivePosts);
 console.log('PLEASE WORK',foundActivePosts);
@@ -314,14 +321,44 @@ console.log(err);
 socket.on('handleChosen',  async (id) => {
 console.log(id);
 try {
-let chosen = await CreatedChatPost.find({_id: id});
-console.log(chosen, 'YESSSS')
+  let chosen = await CreatedChatPost.findById(id);
+  console.log(chosen);
+  console.log(chosen.date + 'T' + chosen.time);
+  let newDate = new Date(chosen.date + 'T' + chosen.time);
+  // let newDate = new Date('2018-03-03' + 'T' + '14:01');
+  let bMonth = Number(newDate.getUTCMonth()) + 1
+
+
+  await console.log(newDate.getUTCMinutes(), newDate.getUTCHours(), newDate.getUTCDate(), (Number(newDate.getUTCMonth()) + 1).toString());
+  let cronTime = (newDate.getUTCMinutes() + ' ' + newDate.getUTCHours() + ' ' +  newDate.getUTCDate() + ' ' +  bMonth.toString() + ' *');
+
+  let newChatSession = {
+    creatorID: chosen._id,
+    topic: chosen.topic,
+    participantID: socket.handshake.session.creatorID,
+    timeCreated: time.toLocaleTimeString(),
+    cronTimeScheduled: cronTime,
+    duration: '15',
+    timezone: 'UTC'
+  };
+  let newSesh = await ChatSession.create(newChatSession);
+
+  console.log('before schedule')
+  cron.schedule(cronTime, () => {
+    console.log('HELLLOO MIRZA');
+  }, {
+    scheduled: true,
+    timezone: "Europe/London"
+  });
+  console.log(newSesh);
+
+
+
+  // console.log(chosen, 'YESSSS')
 } catch (err) {
-console.log(err);
+  console.log(err);
 }
-
-
-})
+});
 
 
 socket.on('disconnect', function(){
