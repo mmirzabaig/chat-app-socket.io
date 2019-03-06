@@ -51,8 +51,6 @@ socketServer.on('connection', socket => {
 
 
 
-
-
   socket.on('subscribeToTimer', async (interval) => {
     await console.log('client is subscribing to timer with interval ', interval);
     await setInterval( async () => {
@@ -142,7 +140,7 @@ socketServer.on('connection', socket => {
     } catch (err) {
       console.log(err)
     }
-  })
+  });
 
   socket.on('logoutUser', (data) => {
     socket.emit('session', 'loggedIn');
@@ -151,7 +149,7 @@ socketServer.on('connection', socket => {
     socket.handshake.session.logged = false;
     // socket.handshake.session.destroy();
     console.log(socket.handshake.session, 'mirza')
-  })
+  });
 
   socket.on('createNewPost', async (newPostData) => {
     console.log(newPostData, 'socket data');
@@ -326,7 +324,7 @@ try {
   console.log(chosen.date + 'T' + chosen.time);
   let newDate = new Date(chosen.date + 'T' + chosen.time);
   // let newDate = new Date('2018-03-03' + 'T' + '14:01');
-  let bMonth = Number(newDate.getUTCMonth()) + 1
+  let bMonth = Number(newDate.getUTCMonth()) + 1;
 
 
   await console.log(newDate.getUTCMinutes(), newDate.getUTCHours(), newDate.getUTCDate(), (Number(newDate.getUTCMonth()) + 1).toString());
@@ -346,6 +344,10 @@ try {
   console.log('before schedule')
   cron.schedule(cronTime, () => {
     console.log('HELLLOO MIRZA');
+    socket.join('PersonalChatroom', () => {
+      console.log('before signal fire');
+      socketServer.in('PersonalChatroom').emit('Personal', 'YEAH BITCH');
+    });
   }, {
     scheduled: true,
     timezone: "Europe/London"
