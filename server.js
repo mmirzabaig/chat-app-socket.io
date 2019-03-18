@@ -9,6 +9,9 @@ var cron = require('node-cron');
 
 const messages = [];
 let time = 'earfafawf';
+let utcTimeHours = '';
+let utcTimeMinutes = '';
+let utcTime = '';
 // Attach session
 
 require('./db/db');
@@ -42,14 +45,6 @@ socketServer.listen(8000, () => {
 socketServer.on('connection', socket => {
   console.log('socket is connected')
   console.log('BEFORE CRON!!!')
-  cron.schedule('0 1 * * *', () => {
-    console.log('Runing a job at 01:00 at America/Sao_Paulo timezone');
-  }, {
-    scheduled: true,
-    timezone: "Europe/London"
-  });
-
-
 
   socket.on('subscribeToTimer', async (interval) => {
     await console.log('client is subscribing to timer with interval ', interval);
@@ -59,7 +54,8 @@ socketServer.on('connection', socket => {
         // document.getElementById("demo").innerHTML = d.toLocaleTimeString();
         // console.log(time.getHours() + ':' + time.getMinutes());
         await console.log(time.getUTCHours() + ':' + time.getUTCMinutes());
-
+        utcTime = time.getUTCHours() + ':' + time.getUTCMinutes();
+        // await console.log(typeof(utcTime), utcTime)
 
       await socketServer.emit('timer', time);
     }, interval);
@@ -330,29 +326,85 @@ try {
   await console.log(newDate.getUTCMinutes(), newDate.getUTCHours(), newDate.getUTCDate(), (Number(newDate.getUTCMonth()) + 1).toString());
   let cronTime = (newDate.getUTCMinutes() + ' ' + newDate.getUTCHours() + ' ' +  newDate.getUTCDate() + ' ' +  bMonth.toString() + ' *');
 
+  let cronDestroyTime = ((newDate.getUTCMinutes() + 2 ) + ' ' + newDate.getUTCHours() + ' ' +  newDate.getUTCDate() + ' ' +  bMonth.toString() + ' *');
+  console.log(cronDestroyTime, 'CRON DESTROY TIME')
+
   let newChatSession = {
     creatorID: chosen._id,
     topic: chosen.topic,
     participantID: socket.handshake.session.creatorID,
     timeCreated: time.toLocaleTimeString(),
     cronTimeScheduled: cronTime,
-    duration: '15',
+    cronDestroyTime: cronDestroyTime,
+    duration: chosen.duration,
     timezone: 'UTC'
   };
+
   let newSesh = await ChatSession.create(newChatSession);
 
+  let currentUserL = await User.findById(socket.handshake.session.creatorID);
+  currentUserL.scheduledChats.push(newSesh._id);
+  currentUserL.save();
+  console.log(currentUserL, 'CURRENT LOOGED IN USER');
+
   console.log('before schedule')
-  cron.schedule(cronTime, () => {
-    console.log('HELLLOO MIRZA');
-    socket.join('PersonalChatroom', () => {
-      console.log('before signal fire');
-      socketServer.in('PersonalChatroom').emit('Personal', 'YEAH BITCH');
-    });
+  let task = cron.schedule(newSesh.cronTimeScheduled, () => {
+  let customRoom = newSesh._id + "IDID" + newSesh.creatorID;
+  let chatObj = {
+      roomID : customRoom,
+      message: 'LAUNCH'
+  }
+  console.log('HELLLOO MIRZA');
+
+  socket.emit('initiateRoomLaunch', chatObj);
+
+  socket.emit('uniqueRoomId', customRoom);
+
+
+
+  socket.on(customRoom + 'Pmessage', async (message) => {
+  if (socket.handshake.session.logged) {
+    const msgObj = await {
+      username: socket.handshake.session.username,
+      message: message
+    }
+    await messages.push(msgObj);
+    console.log(messages);
+    socket.emit(customRoom + 'Pmessages', messages);
+    console.log(msgObj, 'msgObj');
+  } else {
+    socket.emit(customRoom + 'Pmessages', 'Incorrect Username Or Password');
+  }
+  });
   }, {
     scheduled: true,
     timezone: "Europe/London"
   });
-  console.log(newSesh);
+
+
+  let dTask = cron.schedule(newSesh.cronDestroyTime,  () => {
+    console.log('Destroy')
+    socket.emit('initiateRoomDestroy', 'DESTROY');
+
+
+    let currentChatSession = findByIdAndRemove(newSesh._id);
+
+    currentChatSession.then((item) => {
+      console.log('deletedChatSession', item);
+    })
+    let sessionIndex = currentUserL.scheduledChats.indexOf(newSesh._id);
+    currentUserL.splice(sessionIndex, 1);
+    currentUserL.save();
+    console.log(currentUserL, 'CURREBNT USER LOOGED IN');
+    task.destroy();
+    dTask.destroy();
+
+    console.log('THIS SHOULD NOT LOG!!!!!')
+   }, {
+     scheduled: true,
+     timezone: "Europe/London"
+   });
+   console.log(newSesh);
 
 
 

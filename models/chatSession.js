@@ -6,8 +6,10 @@ const chatSessionSchema = new mongoose.Schema({
   participantID: String,
   timeCreated: String,
   cronTimeScheduled: String,
+  cronDestroyTime: String,
   duration: String,
-  timezone: String
-})
+  timezone: String,
+
+});
 
 module.exports = mongoose.model('ChatSession', chatSessionSchema);
