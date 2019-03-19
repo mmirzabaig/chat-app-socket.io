@@ -9,6 +9,7 @@ const chatSessionSchema = new mongoose.Schema({
   cronDestroyTime: String,
   duration: String,
   timezone: String,
+  relatedChatPost: String,
 
 });
 

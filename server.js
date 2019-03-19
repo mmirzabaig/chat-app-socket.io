@@ -2,6 +2,8 @@ const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
 const User = require('./models/user');
+
+
 const CreatedChatPost = require('./models/createdChatPost');
 const ChatSession = require('./models/chatSession');
 const bcrypt = require('bcrypt');
@@ -286,6 +288,7 @@ socket.on('requestTalk', async (data) => {
 
   try {
     const foundPost = await CreatedChatPost.findById(data.id);
+    foundPost.participantID = socket.handshake.session.creatorID;
     foundPost.guest.push(socket.handshake.session.username);
     foundPost.save();
     console.log(foundPost, 'YEA MIRZA')
@@ -330,13 +333,14 @@ try {
   console.log(cronDestroyTime, 'CRON DESTROY TIME')
 
   let newChatSession = {
-    creatorID: chosen._id,
+    creatorID: socket.handshake.session.creatorID,
     topic: chosen.topic,
-    participantID: socket.handshake.session.creatorID,
+    participantID: chosen.participantID,
     timeCreated: time.toLocaleTimeString(),
     cronTimeScheduled: cronTime,
     cronDestroyTime: cronDestroyTime,
     duration: chosen.duration,
+    relatedChatPost: chosen._id,
     timezone: 'UTC'
   };
 
@@ -386,14 +390,16 @@ try {
     console.log('Destroy')
     socket.emit('initiateRoomDestroy', 'DESTROY');
 
-
-    let currentChatSession = findByIdAndRemove(newSesh._id);
-
+    let deleteOriginalPost = CreatedChatPost.findByIdAndRemove(newSesh.relatedChatPost);
+    deleteOriginalPost.then((item) => {
+      console.log('deletedOriginalPost', item);
+    })
+    let currentChatSession = ChatSession.findByIdAndRemove(newSesh._id);
     currentChatSession.then((item) => {
       console.log('deletedChatSession', item);
     })
     let sessionIndex = currentUserL.scheduledChats.indexOf(newSesh._id);
-    currentUserL.splice(sessionIndex, 1);
+    currentUserL.scheduledChats.splice(sessionIndex, 1);
     currentUserL.save();
     console.log(currentUserL, 'CURREBNT USER LOOGED IN');
     task.destroy();
