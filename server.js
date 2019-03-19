@@ -10,10 +10,7 @@ const bcrypt = require('bcrypt');
 var cron = require('node-cron');
 
 const messages = [];
-let time = 'earfafawf';
-let utcTimeHours = '';
-let utcTimeMinutes = '';
-let utcTime = '';
+
 // Attach session
 
 require('./db/db');
@@ -42,11 +39,32 @@ socketServer.use(sharedsession(session, {
 
 socketServer.listen(8000, () => {
   console.log("Your server is listening on port 8000!");
-})
+});
 
 socketServer.on('connection', socket => {
+  let time = 'earfafawf';
+  let utcTimeHours = '';
+  let utcTimeMinutes = '';
+  let utcTime = '';
   console.log('socket is connected')
   console.log('BEFORE CRON!!!')
+
+//// DELETE DATABASE | DELETE DATABASE | DELETE DATABASE
+  // User.deleteMany({}).then((item) => {
+  //   console.log('all users deleted');
+  //   console.log(item);
+  // })
+  //
+  // ChatSession.deleteMany({}).then((item) => {
+  //   console.log('all sessions deleted');
+  //   console.log(item);
+  // })
+  // CreatedChatPost.deleteMany({}).then((item) => {
+  //   console.log('all chats deleted');
+  //   console.log(item);
+  // })
+//// DELETE DATABASE | DELETE DATABASE | DELETE DATABASE
+
 
   socket.on('subscribeToTimer', async (interval) => {
     await console.log('client is subscribing to timer with interval ', interval);
@@ -61,6 +79,16 @@ socketServer.on('connection', socket => {
 
       await socketServer.emit('timer', time);
     }, interval);
+  });
+
+  // CHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSE
+  // THERE IS ALREADY A FUNCTION INPLACE TO INVOKE ALL CHATS WHEN USER LOGS IN
+  socket.on(socket.handshake.session.creatorID, (info) => {
+    if(info.message === 'PARTICAPENT-LAUNCH') {
+      User.findById(socket.handshake.session.creatorID).then((foundUser) => {
+        invokeChat(info.chatSessionID, foundUser);
+      });
+    }
   });
 
   socket.on('message', async (message) => {
@@ -126,89 +154,169 @@ socketServer.on('connection', socket => {
           socket.handshake.session.save();
           console.log(socket.handshake.session);
           const currentUserL = foundUser;
-          console.log(foundUser.scheduledChats, '64567890');
+          console.log(foundUser.ownChats, '64567890');
 
-            foundUser.scheduledChats.forEach((sessionItemID) => {
-
-              let currentSession = ChatSession.findById(sessionItemID);
-              currentSession.then((newSesh) => {
-                console.log(newSesh, 'NEWSESHSSIONN')
-
-                // console.log(currentUserL, 'CURRENT LOOGED IN USER');
-                console.log('before schedule')
-                // CRON CRON CRON CRON CRON
-                let task = cron.schedule(newSesh.cronTimeScheduled, () => {
-                  console.log('AWEFAFWEAFWEA')
-                let customRoom = newSesh._id + "IDID" + newSesh.creatorID;
-                let chatObj = {
-                    roomID : customRoom,
-                    message: 'LAUNCH'
-                }
-                console.log('HELLLOO MIRZA');
-
-                socket.emit('initiateRoomLaunch', chatObj);
-
-                socket.emit('uniqueRoomId', customRoom);
-
-
-
-                socket.on(customRoom + 'Pmessage', async (message) => {
-                if (socket.handshake.session.logged) {
-                  const msgObj = await {
-                    username: socket.handshake.session.username,
-                    message: message
-                  }
-                  await messages.push(msgObj);
-                  console.log(messages);
-                  socket.emit(customRoom + 'Pmessages', messages);
-                  console.log(msgObj, 'msgObj');
-                } else {
-                  socket.emit(customRoom + 'Pmessages', 'Incorrect Username Or Password');
-                }
-                });
-                }, {
-                  scheduled: true,
-                  timezone: "Europe/London"
-                });
-
-
-            console.log(currentUserL, 'CURRENT LOOGED IN USER');
-            console.log('before schedule')
-
-
-            let dTask = cron.schedule(newSesh.cronDestroyTime,  () => {
-              console.log('Destroy')
-              socket.emit('initiateRoomDestroy', 'DESTROY');
-
-              let deleteOriginalPost = CreatedChatPost.findByIdAndRemove(newSesh.relatedChatPost);
-              deleteOriginalPost.then((item) => {
-                console.log('deletedOriginalPost', item);
-              })
-              let currentChatSession = ChatSession.findByIdAndRemove(newSesh._id);
-              currentChatSession.then((item) => {
-                console.log('deletedChatSession', item);
-              })
-              let sessionIndex = currentUserL.scheduledChats.indexOf(newSesh._id);
-              currentUserL.scheduledChats.splice(sessionIndex, 1);
-              currentUserL.save();
-              console.log(currentUserL, 'CURREBNT USER LOOGED IN');
-              task.destroy();
-              dTask.destroy();
-
-              console.log('THIS SHOULD NOT LOG!!!!!')
-             }, {
-               scheduled: true,
-               timezone: "Europe/London"
-             });
-           });
-             console.log('NOTDONENOTDONE')
+          if(foundUser.ownChats.length > 0) {
+            foundUser.ownChats.forEach((sessionItemID) => {
+              invokeChat(sessionItemID, foundUser);
+          //     let currentSession = ChatSession.findById(sessionItemID);
+          //     currentSession.then((newSesh) => {
+          //       console.log(newSesh, 'NEWSESHSSIONN')
+          //
+          //       // console.log(currentUserL, 'CURRENT LOOGED IN USER');
+          //       console.log('before schedule')
+          //       // CRON CRON CRON CRON CRON
+          //       let task = cron.schedule(newSesh.cronTimeScheduled, () => {
+          //         console.log('AWEFAFWEAFWEA')
+          //       let customRoom = newSesh._id + "IDID" + newSesh.creatorID;
+          //       let chatObj = {
+          //           roomID : customRoom,
+          //           message: 'LAUNCH'
+          //       }
+          //       console.log('HELLLOO MIRZA');
+          //
+          //       socket.emit('initiateRoomLaunch', chatObj);
+          //
+          //       socket.emit('uniqueRoomId', customRoom);
+          //
+          //
+          //
+          //       socket.on(customRoom + 'Pmessage', async (message) => {
+          //       if (socket.handshake.session.logged) {
+          //         const msgObj = await {
+          //           username: socket.handshake.session.username,
+          //           message: message
+          //         }
+          //         await messages.push(msgObj);
+          //         console.log(messages);
+          //         socket.emit(customRoom + 'Pmessages', messages);
+          //         console.log(msgObj, 'msgObj');
+          //       } else {
+          //         socket.emit(customRoom + 'Pmessages', 'Incorrect Username Or Password');
+          //       }
+          //       });
+          //       }, {
+          //         scheduled: true,
+          //         timezone: "Europe/London"
+          //       });
+          //
+          //
+          //   console.log(currentUserL, 'CURRENT LOOGED IN USER');
+          //   console.log('before schedule')
+          //
+          //
+          //   let dTask = cron.schedule(newSesh.cronDestroyTime,  () => {
+          //     console.log('Destroy')
+          //     socket.emit('initiateRoomDestroy', 'DESTROY');
+          //
+          //     let deleteOriginalPost = CreatedChatPost.findByIdAndRemove(newSesh.relatedChatPost);
+          //     deleteOriginalPost.then((item) => {
+          //       console.log('deletedOriginalPost', item);
+          //     })
+          //     let currentChatSession = ChatSession.findByIdAndRemove(newSesh._id);
+          //     currentChatSession.then((item) => {
+          //       console.log('deletedChatSession', item);
+          //     })
+          //     let sessionIndex = currentUserL.ownChats.indexOf(newSesh._id);
+          //     currentUserL.ownChats.splice(sessionIndex, 1);
+          //     currentUserL.save();
+          //     console.log(currentUserL, 'CURREBNT USER LOOGED IN');
+          //     task.destroy();
+          //     dTask.destroy();
+          //
+          //     console.log('THIS SHOULD NOT LOG!!!!!')
+          //    }, {
+          //      scheduled: true,
+          //      timezone: "Europe/London"
+          //    });
+          //  });
+          //    console.log('NOTDONENOTDONE')
           });
+          }
+          if(foundUser.foreignChats.length > 0) {
+            foundUser.foreignChats.forEach((sessionItemID) => {
+              invokeChat(sessionItemID, foundUser);
+          //     let currentSession = ChatSession.findById(sessionItemID);
+          //     currentSession.then((newSesh) => {
+          //       console.log(newSesh, 'NEWSESHSSIONN')
+          //
+          //       // console.log(currentUserL, 'CURRENT LOOGED IN USER');
+          //       console.log('before schedule')
+          //       // CRON CRON CRON CRON CRON
+          //       let task = cron.schedule(newSesh.cronTimeScheduled, () => {
+          //         console.log('AWEFAFWEAFWEA')
+          //       let customRoom = newSesh._id + "IDID" + newSesh.creatorID;
+          //       let chatObj = {
+          //           roomID : customRoom,
+          //           message: 'LAUNCH'
+          //       }
+          //       console.log('HELLLOO MIRZA');
+          //
+          //       socket.emit('initiateRoomLaunch', chatObj);
+          //
+          //       socket.emit('uniqueRoomId', customRoom);
+          //
+          //
+          //
+          //       socket.on(customRoom + 'Pmessage', async (message) => {
+          //       if (socket.handshake.session.logged) {
+          //         const msgObj = await {
+          //           username: socket.handshake.session.username,
+          //           message: message
+          //         }
+          //         await messages.push(msgObj);
+          //         console.log(messages);
+          //         socket.emit(customRoom + 'Pmessages', messages);
+          //         console.log(msgObj, 'msgObj');
+          //       } else {
+          //         socket.emit(customRoom + 'Pmessages', 'Incorrect Username Or Password');
+          //       }
+          //       });
+          //       }, {
+          //         scheduled: true,
+          //         timezone: "Europe/London"
+          //       });
+          //
+          //
+          //   console.log(currentUserL, 'CURRENT LOOGED IN USER');
+          //   console.log('before schedule')
+          //
+          //
+          //   let dTask = cron.schedule(newSesh.cronDestroyTime,  () => {
+          //     console.log('Destroy')
+          //     socket.emit('initiateRoomDestroy', 'DESTROY');
+          //
+          //     let deleteOriginalPost = CreatedChatPost.findByIdAndRemove(newSesh.relatedChatPost);
+          //     deleteOriginalPost.then((item) => {
+          //       console.log('deletedOriginalPost', item);
+          //     })
+          //     let currentChatSession = ChatSession.findByIdAndRemove(newSesh._id);
+          //     currentChatSession.then((item) => {
+          //       console.log('deletedChatSession', item);
+          //     })
+          //     let sessionIndex = currentUserL.ownChats.indexOf(newSesh._id);
+          //     currentUserL.ownChats.splice(sessionIndex, 1);
+          //     currentUserL.save();
+          //     console.log(currentUserL, 'CURREBNT USER LOOGED IN');
+          //     task.destroy();
+          //     dTask.destroy();
+          //
+          //     console.log('THIS SHOULD NOT LOG!!!!!')
+          //    }, {
+          //      scheduled: true,
+          //      timezone: "Europe/London"
+          //    });
+          //  });
+          //    console.log('NOTDONENOTDONE')
+          });
+          }
+        foundUser.save();
 
-            await console.log('DONEDONE');
+            console.log('DONEDONE');
 
-            await socket.emit('auth', 'Login Successful');
-            await socket.emit('session', 'loggedIn');
-            await socket.emit('currentUser', socket.handshake.session.username)
+            socket.emit('auth', 'Login Successful');
+            socket.emit('session', 'loggedIn');
+            socket.emit('currentUser', socket.handshake.session.username)
 
         } else {
           socket.emit('auth', 'Incorrect Username Or Password');
@@ -428,7 +536,7 @@ try {
   let newSesh = await ChatSession.create(newChatSession);
 
   let currentUserL = await User.findById(socket.handshake.session.creatorID);
-  currentUserL.scheduledChats.push(newSesh._id);
+  currentUserL.ownChats.push(newSesh._id);
   currentUserL.save();
 
   let guestUser = await User.findById(chosen.participantID);
@@ -438,64 +546,11 @@ try {
   console.log(guestUser, 'GUEST USER | GUEST USER');
 
   console.log('before schedule')
-  let task = cron.schedule(newSesh.cronTimeScheduled, () => {
-  let customRoom = newSesh._id + "IDID" + newSesh.creatorID;
-  let chatObj = {
-      roomID : customRoom,
-      message: 'LAUNCH'
-  }
-  console.log('HELLLOO MIRZA');
 
-  socket.emit('initiateRoomLaunch', chatObj);
-
-  socket.emit('uniqueRoomId', customRoom);
+  // INVOKE CHATROOOM
+  invokeChat(newSesh._id, currentUserL);
 
 
-
-  socket.on(customRoom + 'Pmessage', async (message) => {
-  if (socket.handshake.session.logged) {
-    const msgObj = await {
-      username: socket.handshake.session.username,
-      message: message
-    }
-    await messages.push(msgObj);
-    console.log(messages);
-    socket.emit(customRoom + 'Pmessages', messages);
-    console.log(msgObj, 'msgObj');
-  } else {
-    socket.emit(customRoom + 'Pmessages', 'Incorrect Username Or Password');
-  }
-  });
-  }, {
-    scheduled: true,
-    timezone: "Europe/London"
-  });
-
-
-  let dTask = cron.schedule(newSesh.cronDestroyTime,  () => {
-    console.log('Destroy')
-    socket.emit('initiateRoomDestroy', 'DESTROY');
-
-    let deleteOriginalPost = CreatedChatPost.findByIdAndRemove(newSesh.relatedChatPost);
-    deleteOriginalPost.then((item) => {
-      console.log('deletedOriginalPost', item);
-    })
-    let currentChatSession = ChatSession.findByIdAndRemove(newSesh._id);
-    currentChatSession.then((item) => {
-      console.log('deletedChatSession', item);
-    })
-    let sessionIndex = currentUserL.scheduledChats.indexOf(newSesh._id);
-    currentUserL.scheduledChats.splice(sessionIndex, 1);
-    currentUserL.save();
-    console.log(currentUserL, 'CURREBNT USER LOOGED IN');
-    task.destroy();
-    dTask.destroy();
-
-    console.log('THIS SHOULD NOT LOG!!!!!')
-   }, {
-     scheduled: true,
-     timezone: "Europe/London"
-   });
    console.log(newSesh);
 
 
@@ -518,4 +573,90 @@ socket.handshake.session.save();
 // ------------------------------------------------------
 
 
+
+
+
+
+  const invokeChat = (sessionItemID, currentUserL) => {
+
+    let currentSession = ChatSession.findById(sessionItemID);
+    currentSession.then((newSesh) => {
+      console.log(newSesh, 'NEWSESHSSIONN')
+
+      // console.log(currentUserL, 'CURRENT LOOGED IN USER');
+      console.log('before schedule')
+      // CRON CRON CRON CRON CRON
+      let task = cron.schedule(newSesh.cronTimeScheduled, () => {
+        console.log('AWEFAFWEAFWEA')
+      let customRoom = newSesh._id + "IDID" + newSesh.creatorID;
+      let chatObj = {
+          roomID : customRoom,
+          message: 'LAUNCH'
+      }
+      console.log('HELLLOO MIRZA');
+
+      socket.emit('initiateRoomLaunch', chatObj);
+
+      socket.emit('uniqueRoomId', customRoom);
+
+
+
+      socket.on(customRoom + 'Pmessage', async (message) => {
+      if (socket.handshake.session.logged) {
+        const msgObj = await {
+          username: socket.handshake.session.username,
+          message: message
+        }
+        await messages.push(msgObj);
+        console.log(messages);
+        socket.emit(customRoom + 'Pmessages', messages);
+        console.log(msgObj, 'msgObj');
+      } else {
+        socket.emit(customRoom + 'Pmessages', 'Incorrect Username Or Password');
+      }
+      });
+      }, {
+        scheduled: true,
+        timezone: "Europe/London"
+      });
+
+
+  console.log(currentUserL, 'CURRENT LOOGED IN USER');
+  console.log('before schedule')
+
+
+  let dTask = cron.schedule(newSesh.cronDestroyTime,  () => {
+    console.log('Destroy')
+    socket.emit('initiateRoomDestroy', 'DESTROY');
+
+    let deleteOriginalPost = CreatedChatPost.findByIdAndRemove(newSesh.relatedChatPost);
+    deleteOriginalPost.then((item) => {
+      console.log('deletedOriginalPost', item);
+    })
+    let currentChatSession = ChatSession.findByIdAndRemove(newSesh._id);
+    currentChatSession.then((item) => {
+      let foreignChatDelete = User.findById(item.participantID);
+      foreignChatDelete.then((user) => {
+        let sessionIndexF = user.foreignChats.indexOf(item._id);
+        user.foreignChats.splice(sessionIndexF, 1);
+        user.save();
+      })
+      console.log('deletedChatSession', item);
+    })
+    let sessionIndex = currentUserL.ownChats.indexOf(newSesh._id);
+    currentUserL.ownChats.splice(sessionIndex, 1);
+    currentUserL.save();
+    console.log(currentUserL, 'CURREBNT USER LOOGED IN');
+    task.destroy();
+    dTask.destroy();
+
+    console.log('THIS SHOULD NOT LOG!!!!!')
+   }, {
+     scheduled: true,
+     timezone: "Europe/London"
+   });
+  });
+   console.log('NOTDONENOTDONE')
+
+  }
 });/// end of connection
