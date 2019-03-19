@@ -430,7 +430,12 @@ try {
   let currentUserL = await User.findById(socket.handshake.session.creatorID);
   currentUserL.scheduledChats.push(newSesh._id);
   currentUserL.save();
-  console.log(currentUserL, 'CURRENT LOOGED IN USER');
+
+  let guestUser = await User.findById(chosen.participantID);
+  guestUser.foreignChats.push(newSesh._id);
+  guestUser.save();
+
+  console.log(guestUser, 'GUEST USER | GUEST USER');
 
   console.log('before schedule')
   let task = cron.schedule(newSesh.cronTimeScheduled, () => {

@@ -7,8 +7,8 @@ const UserSchema = new Schema({
   username: String,
   password: String,
   linkedin: String,
-  scheduledChats: [{ type: Schema.Types.ObjectId, ref: 'ChatSession' }],
-  currentChatSession: [String],
+  ownChats: [{ type: Schema.Types.ObjectId, ref: 'ChatSession' }],
+  foreignChats: [String],
   destroyChats: [String]
 });
 
