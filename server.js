@@ -9,7 +9,7 @@ const ChatSession = require('./models/chatSession');
 const bcrypt = require('bcrypt');
 var cron = require('node-cron');
 
-const messages = [];
+let messages = [];
 
 // Attach session
 
@@ -42,6 +42,7 @@ socketServer.listen(8000, () => {
 });
 
 socketServer.on('connection', socket => {
+  console.log(socket.id, 'SOCKET ID')
   let time = 'earfafawf';
   let utcTimeHours = '';
   let utcTimeMinutes = '';
@@ -77,22 +78,28 @@ socketServer.on('connection', socket => {
         utcTime = time.getUTCHours() + ':' + time.getUTCMinutes();
         // await console.log(typeof(utcTime), utcTime)
 
-      await socketServer.emit('timer', time);
+      await socket.emit('timer', time);
     }, interval);
   });
 
   // CHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSE
   // THERE IS ALREADY A FUNCTION INPLACE TO INVOKE ALL CHATS WHEN USER LOGS IN
-  socket.on(socket.handshake.session.creatorID, (info) => {
-    console.log('LIVELAUNCH')
-    if(info.message === 'LIVE-LAUNCH') {
-      console.log(info);
-      console.log('LIVA LAUNCH HITSSSS')
-      User.findById(socket.handshake.session.creatorID).then((foundUser) => {
-        invokeChatGuest(info.chatSessionID, foundUser);
-      });
-    }
-  });
+
+    socket.on('LIVE-LAUNCH', async (info) => {
+      console.log('CHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSE');
+      await console.log(socket.handshake.session.creatorID === info.guest);
+
+      await console.log(socket.handshake.session.creatorID, info, '234567890p');
+      await console.log('LIVELAUNCH')
+      if(info.message === 'LIVE-LAUNCH') {
+      await console.log(info);
+      await console.log('LIVA LAUNCH HITSSSS')
+        await User.findById(socket.handshake.session.creatorID).then((foundUser) => {
+          invokeChatGuest(info.chatSessionID, foundUser);
+        });
+      }
+    });
+
 
   socket.on('message', async (message) => {
     if (socket.handshake.session.logged) {
@@ -101,10 +108,11 @@ socketServer.on('connection', socket => {
         message: message
       }
       await messages.push(msgObj);
-      socketServer.emit('messages', messages);
+      console.log(messages)
+      socket.emit('messages', messages);
       console.log(msgObj);
     } else {
-      socketServer.emit('messages', 'Incorrect Username Or Password');
+      socket.emit('messages', 'Incorrect Username Or Password');
     }
   });
 // --------- REGISTER USER ----------------
@@ -127,15 +135,15 @@ socketServer.on('connection', socket => {
 
 
       if (createdUser._id) {
-        socketServer.emit('registeredUser', 'registration successfull');
+        socket.emit('registeredUser', 'registration successfull');
         socket.handshake.session.username = userData.username;
         socket.handshake.session.creatorID = createdUser._id;
         console.log(createdUser);
         console.log(socket.handshake.session.creatorID);
         socket.handshake.session.logged = true;
         socket.handshake.session.save();
-        await socketServer.emit('session', 'loggedIn');
-        await socketServer.emit('currentUser', socket.handshake.session.username)
+        await socket.emit('session', 'loggedIn');
+        await socket.emit('currentUser', socket.handshake.session.username)
       }
     } catch(err) {
       console.log(err);
@@ -143,6 +151,7 @@ socketServer.on('connection', socket => {
   });
 
   socket.on('loginUser', async (userData) => {
+
     try {
 
       const foundUser = await User.findOne({'username': userData.username});
@@ -155,7 +164,7 @@ socketServer.on('connection', socket => {
           socket.handshake.session.creatorID = foundUser._id;
           socket.handshake.session.logged = true;
           socket.handshake.session.save();
-          console.log(socket.handshake.session);
+          console.log(socket.handshake.session, 'CHECK I ID');
           const currentUserL = foundUser;
           console.log(foundUser.ownChats, '64567890');
 
@@ -173,15 +182,20 @@ socketServer.on('connection', socket => {
 
           console.log('DONEDONE');
 
-          socketServer.emit('auth', 'Login Successful');
-          socketServer.emit('session', 'loggedIn');
-          socketServer.emit('currentUser', socket.handshake.session.username)
+          let sessionObj = {
+            status: 'loggedIn',
+            userID: foundUser._id
+          }
+
+          socket.emit('auth', 'Login Successful');
+          socket.emit('session', sessionObj);
+          socket.emit('currentUser', socket.handshake.session.username)
 
         } else {
-          socketServer.emit('auth', 'Incorrect Username Or Password');
+          socket.emit('auth', 'Incorrect Username Or Password');
         }
       } else {
-        socketServer.emit('auth', 'Incorrect Username Or Password');
+        socket.emit('auth', 'Incorrect Username Or Password');
       } // end of foundUser
     } catch (err) {
       console.log(err)
@@ -189,7 +203,7 @@ socketServer.on('connection', socket => {
   });
 
   socket.on('logoutUser', (data) => {
-    socketServer.emit('session', 'loggedIn');
+    socket.emit('session', 'loggedIn');
     socket.handshake.session.username = null;
     socket.handshake.session.creatorID = null;
     socket.handshake.session.logged = false;
@@ -220,14 +234,14 @@ socketServer.on('connection', socket => {
       try {
         console.log('FOUND IT')
         const foundData = await CreatedChatPost.find({category: 'Mathematics'});
-        socketServer.emit('foundMathematics', foundData);
+        socket.emit('foundMathematics', foundData);
         console.log(foundData, 'FOUND DATAAAaa');
       } catch(err) {
         console.log(err);
       }
 
     } else {
-      socketServer.emit('foundMathematics', 'Incorrect Username Or Password');
+      socket.emit('foundMathematics', 'Incorrect Username Or Password');
     }
 
   })
@@ -240,13 +254,13 @@ socketServer.on('connection', socket => {
       try {
         console.log('FOUND IT')
         const foundData = await CreatedChatPost.find({category: 'Music'});
-        socketServer.emit('foundMusic', foundData);
+        socket.emit('foundMusic', foundData);
         console.log(foundData, 'FOUND DATAAAaa');
       } catch(err) {
         console.log(err);
       }
     } else {
-      socketServer.emit('foundMathematics', 'Incorrect Username Or Password');
+      socket.emit('foundMathematics', 'Incorrect Username Or Password');
     }
 
   })
@@ -259,13 +273,13 @@ socketServer.on('connection', socket => {
       try {
         console.log('FOUND IT')
         const foundData = await CreatedChatPost.find({category: 'Philosophy'});
-        socketServer.emit('foundPhilosophy', foundData);
+        socket.emit('foundPhilosophy', foundData);
         console.log(foundData, 'FOUND DATAAAaa');
       } catch(err) {
         console.log(err);
       }
     } else {
-      socketServer.emit('foundMathematics', 'Incorrect Username Or Password');
+      socket.emit('foundMathematics', 'Incorrect Username Or Password');
     }
 
   })
@@ -280,14 +294,14 @@ socketServer.on('connection', socket => {
       try {
         console.log('FOUND IT')
         const foundData = await CreatedChatPost.find({category: 'CompScieWebDes'});
-        socketServer.emit('foundCompScieWebDes', foundData);
+        socket.emit('foundCompScieWebDes', foundData);
         console.log(foundData, 'FOUND DATAAAaa');
       } catch(err) {
         console.log(err);
       }
 
     } else {
-      socketServer.emit('foundMathematics', 'Incorrect Username Or Password');
+      socket.emit('foundMathematics', 'Incorrect Username Or Password');
     }
 
   })
@@ -301,14 +315,14 @@ socketServer.on('connection', socket => {
       try {
         console.log('FOUND IT')
         const foundData = await CreatedChatPost.find({category: 'Books'});
-        socketServer.emit('foundBooks', foundData);
+        socket.emit('foundBooks', foundData);
         console.log(foundData, 'FOUND DATAAAaa');
       } catch(err) {
         console.log(err);
       }
 
     } else {
-      socketServer.emit('foundBooks', 'Incorrect Username Or Password');
+      socket.emit('foundBooks', 'Incorrect Username Or Password');
     }
 
   })
@@ -321,13 +335,13 @@ socketServer.on('connection', socket => {
       try {
         console.log('FOUND IT')
         const foundData = await CreatedChatPost.find({category: 'Science'});
-        socketServer.emit('foundScience', foundData);
+        socket.emit('foundScience', foundData);
         console.log(foundData, 'FOUND DATAAAaa');
       } catch(err) {
         console.log(err);
       }
     } else {
-      socketServer.emit('foundMathematics', 'Incorrect Username Or Password');
+      socket.emit('foundMathematics', 'Incorrect Username Or Password');
     }
 
   })
@@ -354,7 +368,7 @@ try {
 const foundActivePosts = await CreatedChatPost.find({});
 
 
-socketServer.emit('foundActivePosts', foundActivePosts);
+socket.emit('foundActivePosts', foundActivePosts);
 console.log('PLEASE WORK',foundActivePosts);
 
 } catch(err) {
@@ -441,7 +455,7 @@ const invokeChatGuest = (sessionItemID, currentUserL) => {
     console.log('before schedule')
     // CRON CRON CRON CRON CRON
     let task = cron.schedule(newSesh.cronTimeScheduled, () => {
-      console.log('AWEFAFWEAFWEA')
+      console.log('AWEFAFWEAFWEA GUEST', socket.handshake.session.creatorID)
     let customRoom = newSesh._id + "IDID" + newSesh.creatorID;
     let chatObj = {
         roomID : customRoom,
@@ -449,21 +463,21 @@ const invokeChatGuest = (sessionItemID, currentUserL) => {
     }
     console.log('HELLLOO MIRZA');
 
-    socketServer.emit('initiateRoomLaunch', chatObj);
+    socket.emit('initiateRoomLaunch', chatObj);
 
-    socketServer.emit('uniqueRoomId', customRoom);
+    socket.emit('uniqueRoomId', customRoom);
 
 
 
     socket.on(customRoom + 'Pmessage', async (message) => {
     if (socket.handshake.session.logged) {
-      const msgObj = await {
+      const msgObj = {
         username: socket.handshake.session.username,
         message: message
       }
       await messages.push(msgObj);
       console.log(messages);
-      socketServer.emit(customRoom + 'Pmessages', messages);
+      await socketServer.emit(customRoom + 'Pmessages', messages);
       console.log(msgObj, 'msgObj');
     } else {
       socketServer.emit(customRoom + 'Pmessages', 'Incorrect Username Or Password');
@@ -481,7 +495,7 @@ console.log('before schedule')
 
 let dTask = cron.schedule(newSesh.cronDestroyTime,  () => {
   console.log('Destroy')
-  socketServer.emit('initiateRoomDestroy', 'DESTROY');
+  socket.emit('initiateRoomDestroy', 'DESTROY');
   task.destroy();
   dTask.destroy();
 
@@ -509,13 +523,14 @@ let dTask = cron.schedule(newSesh.cronDestroyTime,  () => {
         chatSessionID: newSesh._id
       }
 
-      socketServer.emit('redirectMessageToServer', intiateGuestChat)
+      // socketServer.emit('redirectMessageToServer', intiateGuestChat)
+      socket.broadcast.emit('redirectMessageToServer', intiateGuestChat);
 
       // console.log(currentUserL, 'CURRENT LOOGED IN USER');
       console.log('before schedule')
       // CRON CRON CRON CRON CRON
       let task = cron.schedule(newSesh.cronTimeScheduled, () => {
-        console.log('AWEFAFWEAFWEA')
+        console.log('AWEFAFWEAFWEA CLIENT', socket.handshake.session.creatorID)
       let customRoom = newSesh._id + "IDID" + newSesh.creatorID;
       let chatObj = {
           roomID : customRoom,
@@ -523,11 +538,11 @@ let dTask = cron.schedule(newSesh.cronDestroyTime,  () => {
       }
       console.log('HELLLOO MIRZA');
 
-      socketServer.emit('initiateRoomLaunch', chatObj);
+      socket.emit('initiateRoomLaunch', chatObj);
 
 ;
 
-      socketServer.emit('uniqueRoomId', customRoom);
+      socket.emit('uniqueRoomId', customRoom);
 
 
 
@@ -538,7 +553,7 @@ let dTask = cron.schedule(newSesh.cronDestroyTime,  () => {
           message: message
         }
         await messages.push(msgObj);
-        console.log(messages);
+        console.log(messages, '9869235462935');
         socketServer.emit(customRoom + 'Pmessages', messages);
         console.log(msgObj, 'msgObj');
       } else {
@@ -557,7 +572,7 @@ let dTask = cron.schedule(newSesh.cronDestroyTime,  () => {
 
   let dTask = cron.schedule(newSesh.cronDestroyTime,  () => {
     console.log('Destroy')
-    socketServer.emit('initiateRoomDestroy', 'DESTROY');
+    socket.emit('initiateRoomDestroy', 'DESTROY');
 
     let deleteOriginalPost = CreatedChatPost.findByIdAndRemove(newSesh.relatedChatPost);
     deleteOriginalPost.then((item) => {
