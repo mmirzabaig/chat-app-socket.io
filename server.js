@@ -2,26 +2,29 @@ const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
 const User = require('./models/user');
+const path = require('path');
+const fs = require('fs');
+const exec = require('child_process').exec;
+const util = require('util');
 
 
 const CreatedChatPost = require('./models/createdChatPost');
 const ChatSession = require('./models/chatSession');
 const bcrypt = require('bcrypt');
-var cron = require('node-cron');
+const cron = require('node-cron');
 
 let messages = [];
-
-// Attach session
-
 require('./db/db');
 
 
 // app.use(express.static(__dirname));
 app.use(bodyParser.urlencoded({extended: false}));
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.json());
 
 
 const server = require('http').createServer(app);
+// io = require('socket.io')(http, { pingInterval: 500 });
 
 const io = require('socket.io');
 const socketServer = io(server);
@@ -50,21 +53,100 @@ socketServer.on('connection', socket => {
   console.log('socket is connected')
   console.log('BEFORE CRON!!!')
 
-//// DELETE DATABASE | DELETE DATABASE | DELETE DATABASE
-  // User.deleteMany({}).then((item) => {
-  //   console.log('all users deleted');
-  //   console.log(item);
-  // })
-  //
-  // ChatSession.deleteMany({}).then((item) => {
-  //   console.log('all sessions deleted');
-  //   console.log(item);
-  // })
-  // CreatedChatPost.deleteMany({}).then((item) => {
-  //   console.log('all chats deleted');
-  //   console.log(item);
-  // })
-//// DELETE DATABASE | DELETE DATABASE | DELETE DATABASE
+  function handler (req, res) {
+    fs.readFile(__dirname + '/index.html',
+    function (err, data) {
+      if (err) {
+        res.writeHead(500);
+        return res.end('Error loading index.html');
+      }
+      res.writeHead(200);
+      res.end(data);
+    });
+  }
+  let files = {};
+
+  socket.on('Start', function (data) { //data contains the variables that we passed through in the html file
+    console.log('HELLO')
+
+        var fileName = data['Name'];
+        files[fileName] = {  //Create a new Entry in The files Variable
+            FileSize : data['Size'],
+            Data     : "",
+            Downloaded : 0
+        }
+        var place = 0;
+        try{
+            var Stat = fs.statSync('Temp/' +  fileName);
+            if(Stat.isFile())
+            {
+                files[fileName]['Downloaded'] = Stat.size;
+                place = Stat.size / 524288;
+            }
+        }
+        catch(er){} //It's a New File
+        fs.open("Temp/" + fileName, "a", 0755, function(err, fd){
+            if(err)
+            {
+                console.log(err);
+            }
+            else
+            {
+                files[fileName]['Handler'] = fd; //We store the file handler so we can write to it later
+                socket.emit('MoreData', { 'Place' : place, Percent : 0 });
+            }
+        });
+});
+
+  socket.on('Upload', function (data){
+    console.log('HELLO')
+    console.log(data)
+        var fileName = data['Name'];
+        files[fileName]['Downloaded'] += data['Data'].length;
+        files[fileName]['Data'] += data['Data'];
+        if(files[fileName]['Downloaded'] == files[fileName]['FileSize']) //If File is Fully Uploaded
+        {
+            socket.emit('uploadComplete', 'true');
+            console.log('UPLOAD COMPLETE SALAY')
+
+            fs.write(files[fileName]['Handler'], files[fileName]['Data'], null, 'Binary', function(err, Writen){
+                //Get Thumbnail Here
+            });
+        }
+        else if(files[fileName]['Data'].length > 10485760){ //If the Data Buffer reaches 10MB
+          console.log('ELSE IF')
+            fs.write(files[fileName]['Handler'], files[fileName]['Data'], null, 'Binary', function(err, Writen){
+                files[fileName]['Data'] = ""; //Reset The Buffer
+                var place = files[fileName]['Downloaded'] / 524288;
+                var Percent = (files[fileName]['Downloaded'] / files[fileName]['FileSize']) * 100;
+                socket.emit('MoreData', { 'Place' : place, 'Percent' :  Percent});
+            });
+        }
+        else
+        {
+          console.log('ELSE')
+            var place = files[fileName]['Downloaded'] / 524288;
+            var Percent = (files[fileName]['Downloaded'] / files[fileName]['FileSize']) * 100;
+            socket.emit('MoreData', { 'Place' : place, 'Percent' :  Percent});
+        }
+    });
+
+
+// // DELETE DATABASE | DELETE DATABASE | DELETE DATABASE
+//   User.deleteMany({}).then((item) => {
+//     console.log('all users deleted');
+//     console.log(item);
+//   })
+//
+//   ChatSession.deleteMany({}).then((item) => {
+//     console.log('all sessions deleted');
+//     console.log(item);
+//   })
+//   CreatedChatPost.deleteMany({}).then((item) => {
+//     console.log('all chats deleted');
+//     console.log(item);
+//   })
+// // DELETE DATABASE | DELETE DATABASE | DELETE DATABASE
 
 
   socket.on('subscribeToTimer', async (interval) => {
@@ -86,8 +168,7 @@ socketServer.on('connection', socket => {
   // THERE IS ALREADY A FUNCTION INPLACE TO INVOKE ALL CHATS WHEN USER LOGS IN
 
     socket.on('LIVE-LAUNCH', async (info) => {
-      console.log('CHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSECHANNEL TO INVOKE ACTIVE CHATS BEING CREATED WHILE USER IS LOGGED IN BECAUSE');
-      await console.log(socket.handshake.session.creatorID === info.guest);
+    await console.log(socket.handshake.session.creatorID === info.guest);
 
       await console.log(socket.handshake.session.creatorID, info, '234567890p');
       await console.log('LIVELAUNCH')
@@ -130,6 +211,7 @@ socketServer.on('connection', socket => {
       userEntry.username = userData.username;
       userEntry.password = passwordHash;
       userEntry.linkedin = userData.linkedin;
+      userEntry.socketID = socket.id;
 
       const createdUser = await User.create(userEntry);
 
@@ -164,9 +246,7 @@ socketServer.on('connection', socket => {
           socket.handshake.session.creatorID = foundUser._id;
           socket.handshake.session.logged = true;
           socket.handshake.session.save();
-          console.log(socket.handshake.session, 'CHECK I ID');
           const currentUserL = foundUser;
-          console.log(foundUser.ownChats, '64567890');
 
           if(foundUser.ownChats.length > 0) {
             foundUser.ownChats.forEach((sessionItemID) => {
@@ -178,9 +258,11 @@ socketServer.on('connection', socket => {
               invokeChatGuest(sessionItemID, foundUser);
           });
           }
-          foundUser.save();
 
-          console.log('DONEDONE');
+          foundUser.socketID = socket.id;
+          foundUser.save();
+          console.log(foundUser, '64567890');
+
 
           let sessionObj = {
             status: 'loggedIn',
@@ -202,8 +284,11 @@ socketServer.on('connection', socket => {
     }
   });
 
-  socket.on('logoutUser', (data) => {
+  socket.on('logoutUser', async (data) => {
     socket.emit('session', 'loggedIn');
+    let logoutUser = await User.findByIdAndUpdate(socket.handshake.session.creatorID);
+    logoutUser.socketID = 'offline';
+    await logoutUser.save();
     socket.handshake.session.username = null;
     socket.handshake.session.creatorID = null;
     socket.handshake.session.logged = false;
@@ -408,7 +493,7 @@ try {
 
   let newSesh = await ChatSession.create(newChatSession);
 
-  let currentUserL = await User.findById(socket.handshake.session.creatorID);
+  let currentUserL = await User.findByIdAndUpdate(socket.handshake.session.creatorID);
   currentUserL.ownChats.push(newSesh._id);
   currentUserL.save();
 
@@ -435,12 +520,12 @@ try {
 });
 
 
-socket.on('disconnect', function(){
-console.log('user disconnected');
-socket.handshake.session.username = null;
-socket.handshake.session.logged = false;
-socket.handshake.session.save();
-});
+  socket.on('disconnect', function(){
+    console.log('user disconnected');
+    socket.handshake.session.username = null;
+    socket.handshake.session.logged = false;
+    socket.handshake.session.save();
+  });
 
 // ------------------------------------------------------
 // ------------------------------------------------------
@@ -467,7 +552,8 @@ const invokeChatGuest = (sessionItemID, currentUserL) => {
 
     socket.emit('uniqueRoomId', customRoom);
 
-
+    console.log('JOINED ROOM!');
+    socket.join(customRoom);
 
     socket.on(customRoom + 'Pmessage', async (message) => {
     if (socket.handshake.session.logged) {
@@ -477,10 +563,10 @@ const invokeChatGuest = (sessionItemID, currentUserL) => {
       }
       await messages.push(msgObj);
       console.log(messages);
-      await socketServer.emit(customRoom + 'Pmessages', messages);
+      await socketServer.in(customRoom).emit(customRoom + 'Pmessages', messages);
       console.log(msgObj, 'msgObj');
     } else {
-      socketServer.emit(customRoom + 'Pmessages', 'Incorrect Username Or Password');
+      await socketServer.in(customRoom).emit(customRoom + 'Pmessages', 'Incorrect Username Or Password');
     }
     });
     }, {
@@ -494,18 +580,17 @@ console.log('before schedule')
 
 
 let dTask = cron.schedule(newSesh.cronDestroyTime,  () => {
-  console.log('Destroy')
+  console.log('Destroy');
   socket.emit('initiateRoomDestroy', 'DESTROY');
   task.destroy();
   dTask.destroy();
+  socket.leave(customRoom);
 
-  console.log('THIS SHOULD NOT LOG!!!!!')
  }, {
    scheduled: true,
    timezone: "Europe/London"
  });
 });
- console.log('NOTDONENOTDONE')
 
 }
 
@@ -517,14 +602,22 @@ let dTask = cron.schedule(newSesh.cronDestroyTime,  () => {
     currentSession.then((newSesh) => {
       console.log(newSesh, 'NEWSESHSSIONN')
 
+
       let intiateGuestChat = {
         message: 'LIVE-LAUNCH',
         guest: newSesh.participantID,
         chatSessionID: newSesh._id
       }
 
+      // let guestUserInvite = User.findById(newSesh.participantID);
+      // guestUserInvite.then((user) => {
+      //   console.log(user.socketID, 'LIVELAUNCHPREPLIVELAUNCHPREPLIVELAUNCHPREPLIVELAUNCHPREPLIVELAUNCHPREPLIVELAUNCHPREPLIVELAUNCHPREPLIVELAUNCHPREPLIVELAUNCHPREPLIVELAUNCHPREPLIVELAUNCHPREPLIVELAUNCHPREPLIVELAUNCHPREPLIVELAUNCHPREPLIVELAUNCHPREP')
+      //   socketServer.to(user.socketID).emit('LIVE-LAUNCH', intiateGuestChat);
+      // })
+
       // socketServer.emit('redirectMessageToServer', intiateGuestChat)
       socket.broadcast.emit('redirectMessageToServer', intiateGuestChat);
+
 
       // console.log(currentUserL, 'CURRENT LOOGED IN USER');
       console.log('before schedule')
@@ -540,7 +633,8 @@ let dTask = cron.schedule(newSesh.cronDestroyTime,  () => {
 
       socket.emit('initiateRoomLaunch', chatObj);
 
-;
+      console.log('JOINED ROOM!');
+      socket.join(customRoom);
 
       socket.emit('uniqueRoomId', customRoom);
 
@@ -548,16 +642,16 @@ let dTask = cron.schedule(newSesh.cronDestroyTime,  () => {
 
       socket.on(customRoom + 'Pmessage', async (message) => {
       if (socket.handshake.session.logged) {
-        const msgObj = await {
+        const msgObj = {
           username: socket.handshake.session.username,
           message: message
         }
         await messages.push(msgObj);
-        console.log(messages, '9869235462935');
-        socketServer.emit(customRoom + 'Pmessages', messages);
+        console.log(messages);
+        await socketServer.in(customRoom).emit(customRoom + 'Pmessages', messages);
         console.log(msgObj, 'msgObj');
       } else {
-        socketServer.emit(customRoom + 'Pmessages', 'Incorrect Username Or Password');
+        await socketServer.in(customRoom).emit(customRoom + 'Pmessages', 'Incorrect Username Or Password');
       }
       });
       }, {
@@ -573,6 +667,7 @@ let dTask = cron.schedule(newSesh.cronDestroyTime,  () => {
   let dTask = cron.schedule(newSesh.cronDestroyTime,  () => {
     console.log('Destroy')
     socket.emit('initiateRoomDestroy', 'DESTROY');
+    socket.leave(customRoom);
 
     let deleteOriginalPost = CreatedChatPost.findByIdAndRemove(newSesh.relatedChatPost);
     deleteOriginalPost.then((item) => {
@@ -580,12 +675,13 @@ let dTask = cron.schedule(newSesh.cronDestroyTime,  () => {
     })
     let currentChatSession = ChatSession.findByIdAndRemove(newSesh._id);
     currentChatSession.then((item) => {
-      let foreignChatDelete = User.findById(item.participantID);
-      foreignChatDelete.then((user) => {
+      let guestUser = User.findByIdAndUpdate(item.participantID);
+      guestUser.then((user) => {
         let sessionIndexF = user.foreignChats.indexOf(item._id);
         user.foreignChats.splice(sessionIndexF, 1);
         user.save();
       })
+      guestUser.save();
       console.log('deletedChatSession', item);
     })
     let sessionIndex = currentUserL.ownChats.indexOf(newSesh._id);
@@ -595,13 +691,11 @@ let dTask = cron.schedule(newSesh.cronDestroyTime,  () => {
     task.destroy();
     dTask.destroy();
 
-    console.log('THIS SHOULD NOT LOG!!!!!')
    }, {
      scheduled: true,
      timezone: "Europe/London"
    });
   });
-   console.log('NOTDONENOTDONE')
 
   }
 });/// end of connection

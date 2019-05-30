@@ -9,7 +9,8 @@ const UserSchema = new Schema({
   linkedin: String,
   ownChats: [{ type: Schema.Types.ObjectId, ref: 'ChatSession' }],
   foreignChats: [String],
-  destroyChats: [String]
+  destroyChats: [String],
+  socketID: String
 });
 
 
