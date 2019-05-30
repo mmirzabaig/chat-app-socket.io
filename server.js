@@ -190,10 +190,10 @@ socketServer.on('connection', socket => {
       }
       await messages.push(msgObj);
       console.log(messages)
-      socket.emit('messages', messages);
+      socketServer.emit('messages', messages);
       console.log(msgObj);
     } else {
-      socket.emit('messages', 'Incorrect Username Or Password');
+      socketServer.emit('messages', 'Incorrect Username Or Password');
     }
   });
 // --------- REGISTER USER ----------------
@@ -539,21 +539,21 @@ const invokeChatGuest = (sessionItemID, currentUserL) => {
     // console.log(currentUserL, 'CURRENT LOOGED IN USER');
     console.log('before schedule')
     // CRON CRON CRON CRON CRON
-    let task = cron.schedule(newSesh.cronTimeScheduled, () => {
+    let task = cron.schedule(newSesh.cronTimeScheduled, async () => {
       console.log('AWEFAFWEAFWEA GUEST', socket.handshake.session.creatorID)
     let customRoom = newSesh._id + "IDID" + newSesh.creatorID;
     let chatObj = {
         roomID : customRoom,
         message: 'LAUNCH'
     }
-    console.log('HELLLOO MIRZA');
+    await console.log('HELLLOO MIRZA');
 
-    socket.emit('initiateRoomLaunch', chatObj);
+    await socket.emit('initiateRoomLaunch', chatObj);
 
-    socket.emit('uniqueRoomId', customRoom);
+    await socket.emit('uniqueRoomId', customRoom);
 
-    console.log('JOINED ROOM!');
-    socket.join(customRoom);
+    await console.log('JOINED ROOM!');
+    await socket.join(customRoom);
 
     socket.on(customRoom + 'Pmessage', async (message) => {
     if (socket.handshake.session.logged) {
@@ -561,12 +561,12 @@ const invokeChatGuest = (sessionItemID, currentUserL) => {
         username: socket.handshake.session.username,
         message: message
       }
-      await messages.push(msgObj);
+        await messages.push(msgObj);
       console.log(messages);
-      await socketServer.in(customRoom).emit(customRoom + 'Pmessages', messages);
+        await socketServer.in(customRoom).emit(customRoom + 'Pmessages', messages);
       console.log(msgObj, 'msgObj');
     } else {
-      await socketServer.in(customRoom).emit(customRoom + 'Pmessages', 'Incorrect Username Or Password');
+        await socketServer.in(customRoom).emit(customRoom + 'Pmessages', 'Incorrect Username Or Password');
     }
     });
     }, {
@@ -622,21 +622,21 @@ let dTask = cron.schedule(newSesh.cronDestroyTime,  () => {
       // console.log(currentUserL, 'CURRENT LOOGED IN USER');
       console.log('before schedule')
       // CRON CRON CRON CRON CRON
-      let task = cron.schedule(newSesh.cronTimeScheduled, () => {
-        console.log('AWEFAFWEAFWEA CLIENT', socket.handshake.session.creatorID)
+      let task = cron.schedule(newSesh.cronTimeScheduled, async () => {
+        await console.log('AWEFAFWEAFWEA CLIENT', socket.handshake.session.creatorID)
       let customRoom = newSesh._id + "IDID" + newSesh.creatorID;
       let chatObj = {
           roomID : customRoom,
           message: 'LAUNCH'
       }
-      console.log('HELLLOO MIRZA');
+      await console.log('HELLLOO MIRZA');
 
-      socket.emit('initiateRoomLaunch', chatObj);
+      await socket.emit('initiateRoomLaunch', chatObj);
 
-      console.log('JOINED ROOM!');
-      socket.join(customRoom);
+      await console.log('JOINED ROOM!');
+      await socket.join(customRoom);
 
-      socket.emit('uniqueRoomId', customRoom);
+      await socket.emit('uniqueRoomId', customRoom);
 
 
 
@@ -646,12 +646,12 @@ let dTask = cron.schedule(newSesh.cronDestroyTime,  () => {
           username: socket.handshake.session.username,
           message: message
         }
-        await messages.push(msgObj);
+          await messages.push(msgObj);
         console.log(messages);
-        await socketServer.in(customRoom).emit(customRoom + 'Pmessages', messages);
+          await socketServer.in(customRoom).emit(customRoom + 'Pmessages', messages);
         console.log(msgObj, 'msgObj');
       } else {
-        await socketServer.in(customRoom).emit(customRoom + 'Pmessages', 'Incorrect Username Or Password');
+          await socketServer.in(customRoom).emit(customRoom + 'Pmessages', 'Incorrect Username Or Password');
       }
       });
       }, {
