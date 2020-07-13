@@ -26,6 +26,11 @@ app.use(bodyParser.json());
 const server = require('http').createServer(app);
 // io = require('socket.io')(http, { pingInterval: 500 });
 
+app.get('/testing', async (req, res) => {
+  res.send("HELLO!!!")
+})
+
+
 const io = require('socket.io');
 const socketServer = io(server);
 const session = require("express-session")({
